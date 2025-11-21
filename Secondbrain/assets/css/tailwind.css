@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Project-level base styles */
+html, body, #__nuxt {
+  height: 100%;
+}
+body {
+  @apply bg-gradient-to-b from-slate-50 via-white to-slate-50;
+}
+
+.brand-gradient {
+  background: linear-gradient(90deg, #7c3aed 0%, #06b6d4 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

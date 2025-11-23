@@ -9,6 +9,8 @@ import java.util.Scanner;
 
 // ================= TODO
 //      - Rag
+//      - Parsing Docs (Pdf, md , ....)
+//      - Better Chunking
 
 
 public class Main {
@@ -30,6 +32,61 @@ public class Main {
         System.out.println("-------------------------------------------");
         System.out.println(Llama.generateWithRag("What is the capital of Morocco?"));
     }
+
+    public static void ragTest () {
+
+        VectorDbManager vectorDb = new VectorDbManager();
+
+        ModelService model = new ModelService(GROQ_API_KEY, MODEL_NAME);
+
+        // Start RAG
+        RagService rag = new RagService(
+                vectorDb,
+                model.getModel(),
+                "You are a helpful assistant. Use only provided context.",
+                100
+        );
+
+        // Test Document
+        String text = """
+                Boujem3a Food is one of the best Restaurant in the Magical Land of Makla, he was rated 4,99 stars 
+                and has been nominated for the prize of the most visited restaurant, the restaurant won awards
+                in numerous dishes including Couscous, Tajine and Briwat m3amrin. However, his rival UM6P
+                Resto has been more than capable of putting up a fight, in fact, the latter managed to win also prizes
+                in dishes like Pizza and Guillotine de poulet, needless to say, the Magical Land Of Makla continues
+                to experience top tier food due to this rivalry and might surpass what people expect.
+                But within the deep caves of the Magical Land of Makla, laid dormant a new competitor. a beast that
+                might portray itself as danger, since it did 99 years ago, where it used a forbidden spell to cook the   
+                best L7em with ber9o9 on Land, But it spread a disease that forced people to sleep for ages. The Legends
+                says that the seal wont hold for so long, and might be at any moment, pulling back the Magic Land of Makla
+                back into the abyss of darkness, the land has yet to experience the wrath of Hamid The Destroyer. 
+                """;
+
+        System.out.println("Adding document…");
+
+        List<String> ids = rag.addDocument("doc1", text);
+
+        // print added IDs
+        for (String id : ids) {
+            System.out.println("Added chunk id: " + id);
+        }
+
+
+        String query = "I want to eat italian food";
+
+        System.out.println("\nSearching…");
+
+        List<VectorDbManager.SearchResult> results = rag.search(query, 3);
+        for (VectorDbManager.SearchResult res : results) {
+            System.out.println("Match: " + res.getText());
+        }
+
+        System.out.println("\nLLM Response:");
+        String answer = rag.answer(query, 3);
+
+        System.out.println(answer);
+    }
+
 
     public static void vectorDbTest() {
         VectorDbManager vectorDb = new VectorDbManager();
@@ -89,7 +146,7 @@ public class Main {
 
 
     public static void main(String[] args) {
-        vectorDbTest();
+        ragTest();
     }
 
 }

@@ -56,7 +56,6 @@ public class VectorDbManager {
 
     }
 
-
     public List<SearchResult> search(Embedding query, int maxResults, double minScore) {
         return store.findRelevant(query, maxResults, minScore).stream()
                 .map(m -> new SearchResult(m.embeddingId(), m.embedded(), m.score()))

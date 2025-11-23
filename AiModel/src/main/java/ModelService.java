@@ -23,7 +23,9 @@ public class ModelService {
                 .timeout(Duration.ofSeconds(60))
                 .build();
     }
-
+    public ChatLanguageModel getModel() {
+        return chatModel;
+    }
 
 
     public String generateResponse(String systemPrompt, String userMessage) {

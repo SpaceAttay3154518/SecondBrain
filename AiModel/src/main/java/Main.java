@@ -10,13 +10,34 @@ import java.util.Scanner;
 // ================= TODO
 //      - Rag
 //      - Parsing Docs (Pdf, md , ....)
-//      - Better Chunking
 
 
 public class Main {
 
     private static final String GROQ_API_KEY = Config.get("GROQ_API_KEY");
     private static final String MODEL_NAME = Config.get("MODEL_NAME");
+
+
+    public static void queryManagerTest() {
+
+        // Initialize the QueryManager
+        QueryManager qm = new QueryManager(GROQ_API_KEY, MODEL_NAME);
+
+        qm.getDb().loadFromFile("./vector.db");
+
+        // Test query
+        String query = "Where can I find the Moroccan Traditional Food?";
+
+
+
+        // Execute query
+        String answer = qm.answerQuery(query);
+
+        // Print result
+        System.out.println("Query: " + query);
+        System.out.println("Answer: " + answer);
+
+    }
 
     public static void llmTest() {
         System.out.println("=== LLM Test ===\n");
@@ -29,8 +50,6 @@ public class Main {
         System.out.println(Llama.generateResponse("What is the capital of Morocco"));
         System.out.println("-------------------------------------------");
         System.out.println(Llama.generateResponse("You are not a helpful AI Assistant","What is the capital of Morocco?"));
-        System.out.println("-------------------------------------------");
-        System.out.println(Llama.generateWithRag("What is the capital of Morocco?"));
     }
 
     public static void ragTest () {
@@ -42,9 +61,7 @@ public class Main {
         // Start RAG
         RagService rag = new RagService(
                 vectorDb,
-                model.getModel(),
-                "You are a helpful assistant. Use only provided context.",
-                100
+                model.getModel()
         );
 
         // Test Document
@@ -146,7 +163,7 @@ public class Main {
 
 
     public static void main(String[] args) {
-        ragTest();
+        queryManagerTest();
     }
 
 }

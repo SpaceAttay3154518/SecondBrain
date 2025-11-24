@@ -53,7 +53,6 @@ public class VectorDbManager {
 
     public void loadFromFile(String filePath) {
         store = InMemoryEmbeddingStore.fromFile(filePath);
-
     }
 
     public List<SearchResult> search(Embedding query, int maxResults, double minScore) {
@@ -65,6 +64,7 @@ public class VectorDbManager {
     public EmbeddingModel getEmbeddingModel() {
         return embeddingModel;
     }
+
 
     public static class SearchResult {
         private final String id;

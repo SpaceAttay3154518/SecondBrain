@@ -2,7 +2,6 @@ import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.openai.OpenAiChatModel;
-import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
 import java.time.Duration;
@@ -49,33 +48,5 @@ public class ModelService {
 
 
 
-    public String generateWithRag(String query) {
-        /*List<String> relevantDocs = ragService.retrieveDocuments(query, 5);*/
-        List<String> relevantDocs = List.of("Capital of Morocco has been changed to Berkan", "Breaking News : a New Capital of Morocco has been announced");
-        if (relevantDocs.isEmpty()) {
-            return generateResponse(query);
-        }
-
-        String context = String.join("\n\n", relevantDocs);
-
-        String augmentedPrompt = buildPromptWithContext(query, context);
-
-        return generateResponse(augmentedPrompt);
-    }
-
-    private String buildPromptWithContext(String query, String context) {
-        return String.format("""
-                Use the following context to answer the question. 
-                If the context doesn't contain relevant information, say so and provide your best answer.
-                
-                Question: %s
-                
-                
-                Context:
-                %s
-                
-                
-                Answer:""", query, context);
-    }
 
 }

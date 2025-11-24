@@ -17,12 +17,10 @@ public class RagService {
     private final String systemPrompt;
 
     public RagService(VectorDbManager vectorDb,
-                      ChatLanguageModel chatModel,
-                      String systemPrompt,
-                      int chunkSize) {
+                      ChatLanguageModel chatModel) {
         this.vectorDb = vectorDb;
         this.chatModel = chatModel;
-        this.systemPrompt = systemPrompt != null ? systemPrompt : "You are a helpful assistant.";
+        this.systemPrompt = "You are a helpful assistant.";
     }
 
     public List<String> chunkText(String text) {

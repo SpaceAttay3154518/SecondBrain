@@ -1,3 +1,10 @@
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,6 +69,22 @@ public class QueryManager {
     }
 
     // TODO - Parse Docs
+    public void parseTxt(String filePath) throws IOException {
+        String doc = new String(Files.readAllBytes(Paths.get(filePath)));
+        rag.addDocument(filePath, doc);
+    }
+    public void parsePDF(String filePath) throws IOException {
+        File file = new File(filePath);
+        if (!file.exists() || !file.isFile()) {
+            throw new IOException("File not found: " + filePath);
+        }
+
+        try (PDDocument document = PDDocument.load(file)) {
+            PDFTextStripper stripper = new PDFTextStripper();
+            String doc = stripper.getText(document);
+            rag.addDocument(filePath, doc);
+        }
+    }
 
 
 }

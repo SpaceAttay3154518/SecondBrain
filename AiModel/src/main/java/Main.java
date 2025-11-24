@@ -2,14 +2,16 @@ import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.data.document.Metadata;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
 
 // ================= TODO
-//      - Rag
-//      - Parsing Docs (Pdf, md , ....)
+//      - Better Chunking
 
 
 public class Main {
@@ -18,12 +20,11 @@ public class Main {
     private static final String MODEL_NAME = Config.get("MODEL_NAME");
 
 
-    public static void queryManagerTest() {
+    public static void queryManagerTest() throws IOException {
 
         // Initialize the QueryManager
         QueryManager qm = new QueryManager(GROQ_API_KEY, MODEL_NAME);
 
-        qm.getDb().loadFromFile("./vector.db");
 
         // Test query
         String query = "Where can I find the Moroccan Traditional Food?";
@@ -36,6 +37,25 @@ public class Main {
         // Print result
         System.out.println("Query: " + query);
         System.out.println("Answer: " + answer);
+
+
+        System.out.println("------------------------------------------");
+
+
+        qm.parsePDF("./LandOfFood.pdf");
+        /*qm.parseTxt("./LandOfFood.txt");*/
+        // Test query
+        query = "Where can I find the Moroccan Traditional Food?";
+
+
+
+        // Execute query
+        answer = qm.answerQuery(query);
+
+        // Print result
+        System.out.println("Query: " + query);
+        System.out.println("Answer: " + answer);
+
 
     }
 
@@ -160,10 +180,77 @@ public class Main {
 
     }
 
+    private static void addFile(Scanner scanner, QueryManager qm) throws IOException {
+        System.out.print("Enter the full path of the file: ");
+        String path = scanner.nextLine();
+        File file = new File(path);
+        String fileName = file.getName().toLowerCase();
+
+        if (fileName.endsWith(".txt") || fileName.endsWith(".md")) {
+            qm.parseTxt(path);
+        } else if (fileName.endsWith(".pdf")) {
+            qm.parsePDF(path);
+        } else {
+            System.out.println("Unsupported file type. Only .txt, .md, or .pdf are allowed.");
+        }
 
 
-    public static void main(String[] args) {
-        queryManagerTest();
+    }
+
+    private static void askAI(Scanner scanner, QueryManager qm) {
+        System.out.print("Ask the AI a question: ");
+        String query = scanner.nextLine();
+
+
+        // AI response
+        String answer = qm.answerQuery(query);
+
+        System.out.println("Query: " + query);
+        System.out.println("Answer: " + answer);
+    }
+
+
+    public static void fullTest() throws IOException {
+
+        Scanner scanner = new Scanner(System.in);
+        boolean running = true;
+        QueryManager qm = new QueryManager(GROQ_API_KEY, MODEL_NAME);
+
+        while (running) {
+            System.out.println("\n--- Menu ---");
+            System.out.println("1. Add a file");
+            System.out.println("2. Ask the AI something");
+            System.out.println("3. Clear DB");
+            System.out.println("4. Exit");
+            System.out.print("Choose an option: ");
+
+            String choice = scanner.nextLine();
+
+            switch (choice) {
+                case "1":
+                    addFile(scanner, qm);
+                    break;
+                case "2":
+                    askAI(scanner, qm);
+                    break;
+                case "3":
+                    qm.getDb().clear();
+                    break;
+                case "4":
+                    running = false;
+                    System.out.println("Exiting...");
+                    break;
+                default:
+                    System.out.println("Invalid option. Try again.");
+            }
+        }
+
+        scanner.close();
+
+    }
+
+    public static void main(String[] args) throws IOException {
+        fullTest();
     }
 
 }

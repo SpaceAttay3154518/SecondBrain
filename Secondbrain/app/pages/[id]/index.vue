@@ -69,7 +69,9 @@
                 </ul>
 
                 <div class="mt-4">
-                  <button @click="uploadFiles" class="px-4 py-2 bg-indigo-600 text-white rounded-lg shadow">Upload</button>
+                  <button @click="uploadFiles" :disabled="loading" class="px-4 py-2 bg-indigo-600 text-white rounded-lg shadow disabled:opacity-50">
+                    {{ loading ? 'Uploading...' : 'Upload' }}
+                  </button>
                 </div>
               </div>
             </div>
@@ -96,6 +98,29 @@
               <h3 class="text-sm font-semibold text-slate-700 mb-2">Workspace Summary</h3>
               <div class="text-sm text-slate-600">You have <strong>{{ files.length }}</strong> files staged for upload.</div>
             </div>
+
+            <!-- Uploaded Documents -->
+            <div class="bg-white rounded-2xl p-6 shadow-lg border border-slate-100">
+              <h3 class="text-sm font-semibold text-slate-700 mb-3">Your Documents</h3>
+              
+              <div v-if="loadingDocs" class="text-sm text-slate-500">Loading documents...</div>
+              
+              <div v-else-if="uploadedDocuments.length === 0" class="text-sm text-slate-500">
+                No documents uploaded yet
+              </div>
+              
+              <ul v-else class="space-y-2">
+                <li v-for="doc in uploadedDocuments" :key="doc.id" 
+                    class="flex items-center justify-between p-2 bg-slate-50 rounded-md border border-slate-100">
+                  <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    <span class="text-xs text-slate-700">{{ doc.filename || doc.name || 'Document' }}</span>
+                  </div>
+                </li>
+              </ul>
+            </div>
           </aside>
         </main>
       </div>
@@ -108,9 +133,11 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { projectAuth } from '../../../firebase/config'
+import { useAI } from '../../../composables/useAI'
 
 const route = useRoute()
 const router = useRouter()
+const { askQuestion, uploadDocument, getUserDocuments } = useAI()
 
 const user = ref(null)
 const files = ref([])
@@ -118,6 +145,22 @@ const question = ref('')
 const answer = ref('')
 const loading = ref(false)
 const recent = ref([])
+const uploadedDocuments = ref([])
+const loadingDocs = ref(false)
+
+// Fetch user's uploaded documents
+const fetchDocuments = async () => {
+  loadingDocs.value = true
+  try {
+    const docs = await getUserDocuments()
+    uploadedDocuments.value = docs
+    console.log('Fetched documents:', docs)
+  } catch (err) {
+    console.error('Error fetching documents:', err)
+  } finally {
+    loadingDocs.value = false
+  }
+}
 
 // Ensure only authenticated user can view their dashboard
 onMounted(() => {
@@ -133,6 +176,9 @@ onMounted(() => {
       if (routeId && routeId !== u.uid) {
         router.push(`/${u.uid}`)
       }
+      
+      // Fetch user's documents after authentication
+      fetchDocuments()
     })
   }
 })
@@ -152,22 +198,53 @@ const handleFiles = (e) => {
 
 const uploadFiles = async () => {
   if (!files.value.length) return
-  // Placeholder: implement actual storage upload (Firebase Storage) later
-  recent.value.unshift(`Uploaded ${files.value.length} file(s)`)
-  files.value = []
-  answer.value = ''
+  
+  loading.value = true
+  try {
+    // Upload each file
+    for (const file of files.value) {
+      const result = await uploadDocument(file)
+      if (result.success) {
+        recent.value.unshift(`Uploaded: ${file.name}`)
+      } else {
+        recent.value.unshift(`Failed to upload: ${file.name}`)
+        console.error('Upload error:', result.message)
+      }
+    }
+    
+    // Clear files and refresh documents list
+    files.value = []
+    await fetchDocuments()
+  } catch (err) {
+    console.error('Upload error:', err)
+    recent.value.unshift('Upload failed')
+  } finally {
+    loading.value = false
+  }
 }
 
 const askAI = async () => {
   if (!question.value.trim()) return
+  
   loading.value = true
   answer.value = ''
-  // Placeholder: call your AI endpoint here. We'll mock a response.
-  await new Promise((r) => setTimeout(r, 800))
-  answer.value = `<strong>Sample answer:</strong> This is a mocked response for "${escapeHtml(question.value)}".`
-  recent.value.unshift(`Asked: ${question.value}`)
-  question.value = ''
-  loading.value = false
+  
+  try {
+    const result = await askQuestion(question.value)
+    
+    if (result.success) {
+      answer.value = `<strong>AI Answer:</strong><br/>${escapeHtml(result.answer)}`
+      recent.value.unshift(`Asked: ${question.value}`)
+    } else {
+      answer.value = `<strong class="text-red-600">Error:</strong> ${escapeHtml(result.error || 'Failed to get answer')}`
+    }
+  } catch (err) {
+    console.error('AI error:', err)
+    answer.value = `<strong class="text-red-600">Error:</strong> ${escapeHtml(err.message)}`
+  } finally {
+    question.value = ''
+    loading.value = false
+  }
 }
 
 const handleLogout = async () => {

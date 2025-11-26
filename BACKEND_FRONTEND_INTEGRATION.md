@@ -1,7 +1,7 @@
 # Backend-Frontend Integration Setup
 
 ## Overview
-This document describes the working integration between the Nuxt 3 frontend and Spring Boot backend with Firebase Authentication.
+This document describes the working integration between the Nuxt 3 frontend and Spring Boot backend with Firebase Authentication and AI Model service.
 
 ## Architecture
 
@@ -14,6 +14,14 @@ This document describes the working integration between the Nuxt 3 frontend and 
 - **Location**: `/backend`
 - **Port**: `http://localhost:8080`
 - **Framework**: Spring Boot 4.0.0 with Java 17
+
+### AI Model Service
+- **Location**: `/AiModel`
+- **Port**: `http://localhost:8081`
+- **Framework**: Spring Boot (to be converted)
+- **Purpose**: RAG-based Q&A and document processing
+
+**See [AI_INTEGRATION_GUIDE.md](AI_INTEGRATION_GUIDE.md) for detailed AI integration documentation.**
 
 ## Authentication Flow
 

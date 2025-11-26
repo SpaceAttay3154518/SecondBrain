@@ -1,3 +1,5 @@
+package com.main.AI;
+
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.data.document.Metadata;

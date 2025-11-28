@@ -1,3 +1,5 @@
+package com.main.AI;
+
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.data.document.Metadata;
@@ -5,6 +7,8 @@ import dev.langchain4j.data.document.Metadata;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
@@ -42,7 +46,7 @@ public class Main {
         System.out.println("------------------------------------------");
 
 
-        qm.parsePDF("./LandOfFood.pdf");
+        qm.parsePDF(Files.readAllBytes(Path.of("./LandOfFood.pdf")), "LandOfFood.pdf");
         /*qm.parseTxt("./LandOfFood.txt");*/
         // Test query
         query = "Where can I find the Moroccan Traditional Food?";
@@ -88,10 +92,10 @@ public class Main {
         String text = """
                 Boujem3a Food is one of the best Restaurant in the Magical Land of Makla, he was rated 4,99 stars 
                 and has been nominated for the prize of the most visited restaurant, the restaurant won awards
-                in numerous dishes including Couscous, Tajine and Briwat m3amrin. However, his rival UM6P
+                in numerous dishes including Couscous, Tajine and Briwat m3amrin.\n\n However, his rival UM6P
                 Resto has been more than capable of putting up a fight, in fact, the latter managed to win also prizes
                 in dishes like Pizza and Guillotine de poulet, needless to say, the Magical Land Of Makla continues
-                to experience top tier food due to this rivalry and might surpass what people expect.
+                to experience top tier food due to this rivalry and might surpass what people expect.\n\n
                 But within the deep caves of the Magical Land of Makla, laid dormant a new competitor. a beast that
                 might portray itself as danger, since it did 99 years ago, where it used a forbidden spell to cook the   
                 best L7em with ber9o9 on Land, But it spread a disease that forced people to sleep for ages. The Legends
@@ -107,7 +111,7 @@ public class Main {
         for (String id : ids) {
             System.out.println("Added chunk id: " + id);
         }
-
+        vectorDb.saveToFile("./src/main/resources/dbs/1234.db");
 
         String query = "I want to eat italian food";
 
@@ -186,10 +190,11 @@ public class Main {
         File file = new File(path);
         String fileName = file.getName().toLowerCase();
 
+        Path filepath = Path.of(path);
         if (fileName.endsWith(".txt") || fileName.endsWith(".md")) {
-            qm.parseTxt(path);
+            qm.parseTxt(Files.readAllBytes(filepath), fileName);
         } else if (fileName.endsWith(".pdf")) {
-            qm.parsePDF(path);
+            qm.parsePDF(Files.readAllBytes(filepath), fileName);
         } else {
             System.out.println("Unsupported file type. Only .txt, .md, or .pdf are allowed.");
         }
@@ -250,7 +255,7 @@ public class Main {
     }
 
     public static void main(String[] args) throws IOException {
-        fullTest();
+        ragTest();
     }
 
 }

@@ -1,3 +1,5 @@
+package com.main.AI;
+
 import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.data.embedding.Embedding;
@@ -30,30 +32,19 @@ public class RagService {
             return chunks;
         }
 
-        StringBuilder currentSentence = new StringBuilder();
+        // Split on one or more newlines (\n or \r\n)
+        String[] paragraphs = text.split("\n\\R+");
 
-        for (int i = 0; i < text.length(); i++) {
-            char c = text.charAt(i);
-            currentSentence.append(c);
-
-            // When we hit a full stop, end the sentence
-            if (c == '.') {
-                String sentence = currentSentence.toString().trim();
-                if (!sentence.isEmpty()) {
-                    chunks.add(sentence);
-                }
-                currentSentence.setLength(0); // Reset buffer
+        for (String p : paragraphs) {
+            String cleaned = p.trim();
+            if (!cleaned.isEmpty()) {
+                chunks.add(cleaned);
             }
-        }
-
-        // Add leftover text IF it doesn't end with a period
-        String leftover = currentSentence.toString().trim();
-        if (!leftover.isEmpty()) {
-            chunks.add(leftover);
         }
 
         return chunks;
     }
+
 
 
     public List<String> addDocument(String docId, String text) {

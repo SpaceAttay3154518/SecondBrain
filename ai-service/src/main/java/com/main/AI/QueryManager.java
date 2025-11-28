@@ -1,3 +1,5 @@
+package com.main.AI;
+
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 
@@ -7,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class QueryManager {
     private RagService rag;
@@ -45,7 +48,7 @@ public class QueryManager {
 
     private String buildPromptWithContext(String query, String context) {
         return String.format("""
-                Use the following context to answer the question. 
+                Use the following context to answer the question.
                 If the context doesn't contain relevant information, say so and provide your best answer.
                 
                 Question: %s
@@ -69,20 +72,16 @@ public class QueryManager {
     }
 
     // TODO - Parse Docs
-    public void parseTxt(String filePath) throws IOException {
-        String doc = new String(Files.readAllBytes(Paths.get(filePath)));
-        rag.addDocument(filePath, doc);
+    public void parseTxt(byte[] fileBytes, String id) throws IOException {
+        String content = new String(fileBytes);
+        rag.addDocument(id, content);
     }
-    public void parsePDF(String filePath) throws IOException {
-        File file = new File(filePath);
-        if (!file.exists() || !file.isFile()) {
-            throw new IOException("File not found: " + filePath);
-        }
+    public void parsePDF(byte[] fileByte, String id) throws IOException {
 
-        try (PDDocument document = PDDocument.load(file)) {
+        try (PDDocument document = PDDocument.load(fileByte)) {
             PDFTextStripper stripper = new PDFTextStripper();
             String doc = stripper.getText(document);
-            rag.addDocument(filePath, doc);
+            rag.addDocument(id, doc);
         }
     }
 

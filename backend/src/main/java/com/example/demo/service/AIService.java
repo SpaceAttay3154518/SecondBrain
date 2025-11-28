@@ -48,12 +48,34 @@ public class AIService {
                 String.class
             );
             
-            // Parse response manually since AI Model returns {id, reply} not {answer}
+            // Parse response - AI Model returns {"id": "...", "reply": "..."}
             String responseBody = response.getBody();
-            if (responseBody != null && responseBody.contains("reply")) {
-                // Extract reply from JSON
-                String reply = responseBody.replaceAll(".*\"reply\"\\s*:\\s*\"([^\"]+)\".*", "$1");
-                return new QueryResponse(reply, true);
+            if (responseBody != null && responseBody.contains("\"reply\"")) {
+                // Extract reply value using simple string manipulation
+                int replyStart = responseBody.indexOf("\"reply\"");
+                if (replyStart != -1) {
+                    int valueStart = responseBody.indexOf(":", replyStart) + 1;
+                    valueStart = responseBody.indexOf("\"", valueStart) + 1; // Skip opening quote
+                    
+                    // Find the closing quote, handling escaped quotes
+                    int valueEnd = valueStart;
+                    while (valueEnd < responseBody.length()) {
+                        if (responseBody.charAt(valueEnd) == '"' && responseBody.charAt(valueEnd - 1) != '\\') {
+                            break;
+                        }
+                        valueEnd++;
+                    }
+                    
+                    if (valueEnd < responseBody.length()) {
+                        String reply = responseBody.substring(valueStart, valueEnd);
+                        // Unescape common JSON escapes
+                        reply = reply.replace("\\\"", "\"")
+                                    .replace("\\n", "\n")
+                                    .replace("\\t", "\t")
+                                    .replace("\\\\", "\\");
+                        return new QueryResponse(reply, true);
+                    }
+                }
             }
             
             return new QueryResponse(responseBody, true);

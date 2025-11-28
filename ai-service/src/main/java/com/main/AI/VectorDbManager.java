@@ -6,6 +6,8 @@ import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.embedding.onnx.allminilml6v2.AllMiniLmL6V2EmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +35,31 @@ public class VectorDbManager {
             ids.add(id);
         }
         return ids;
+    }
+
+    public List<String> retrieveDocuments() {
+        String jsonContent = ((InMemoryEmbeddingStore<TextSegment>) store).serializeToJson();
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode root = mapper.readTree(jsonContent);
+
+        List<String> fileNames = new ArrayList<>();
+
+        // Loop through entries
+        for (JsonNode entry : root.path("entries")) {
+            JsonNode docIdNode = entry
+                    .path("embedded")
+                    .path("metadata")
+                    .path("metadata")
+                    .path("docId");
+
+            if (!docIdNode.isMissingNode()) {
+                fileNames.add(docIdNode.asText());
+            }
+        }
+
+        // Print result
+        fileNames.forEach(System.out::println);
+        return fileNames;
     }
 
 

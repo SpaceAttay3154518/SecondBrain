@@ -1,8 +1,11 @@
 package com.main.AI;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.FileWriter;
 import java.util.List;
@@ -120,6 +123,21 @@ public class AiController {
 
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/documents")
+    public ResponseEntity<String> getDocuments(@RequestBody ChatRequest request) throws JsonProcessingException {
+        
+        qm.getDb().loadFromFile("./src/main/resources/dbs/" + request.getId() + ".db");
+        List<String> docs = qm.getDb().retrieveDocuments(); 
+        Map<String, Object> response = new HashMap<>();
+        response.put("id", request.getId());
+
+
+        ObjectMapper mapper = new ObjectMapper();
+        String json = mapper.writeValueAsString(docs);
+        return ResponseEntity.ok(json);
+
     }
 
     // ------------ DTO ------------

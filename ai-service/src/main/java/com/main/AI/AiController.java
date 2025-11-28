@@ -3,6 +3,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -48,6 +52,16 @@ public class AiController {
         String id = request.getId();
         String msg = request.getQuestion();
 
+        String filepath = "./src/main/resources/dbs/" + id + ".db";
+        Path path = Paths.get(filepath);
+        if (!Files.exists(path)) {
+
+            qm.getDb().saveToFile(filepath);
+
+        }
+
+        qm.getDb().loadFromFile(filepath);
+
         String res = qm.answerQuery(msg);
 
         Map<String, Object> response = new HashMap<>();
@@ -63,11 +77,24 @@ public class AiController {
     @DeleteMapping("/deleteDB")
     public ResponseEntity<Map<String, Object>> deleteDB(@RequestBody ChatRequest request) {
 
-        // TODO: actual deletion logic
+       String filepath = "./src/main/resources/dbs/" + request.getId() + ".db";
+
+       File file = new File(filepath);
 
         Map<String, Object> response = new HashMap<>();
         response.put("id", request.getId());
-        response.put("status", "deleted");
+
+        if (file.delete()) {
+
+            response.put("status", "deleted");
+
+        } else {
+
+            response.put("status", "Failed");
+
+        }
+
+
 
         return ResponseEntity.ok(response);
     }

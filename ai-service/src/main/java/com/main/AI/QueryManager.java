@@ -48,7 +48,7 @@ public class QueryManager {
 
     private String buildPromptWithContext(String query, String context) {
         return String.format("""
-                Use the following context to answer the question. 
+                Use the following context to answer the question.
                 If the context doesn't contain relevant information, say so and provide your best answer.
                 
                 Question: %s
@@ -72,16 +72,16 @@ public class QueryManager {
     }
 
     // TODO - Parse Docs
-    public void parseTxt(byte[] fileBytes) throws IOException {
-        String content = new String(fileBytes);;
-        rag.addDocument(UUID.randomUUID().toString(), content);
+    public void parseTxt(byte[] fileBytes, String id) throws IOException {
+        String content = new String(fileBytes);
+        rag.addDocument(id, content);
     }
-    public void parsePDF(byte[] fileByte) throws IOException {
+    public void parsePDF(byte[] fileByte, String id) throws IOException {
 
         try (PDDocument document = PDDocument.load(fileByte)) {
             PDFTextStripper stripper = new PDFTextStripper();
             String doc = stripper.getText(document);
-            rag.addDocument(UUID.randomUUID().toString(), doc);
+            rag.addDocument(id, doc);
         }
     }
 

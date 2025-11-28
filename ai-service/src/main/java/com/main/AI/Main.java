@@ -46,7 +46,7 @@ public class Main {
         System.out.println("------------------------------------------");
 
 
-        qm.parsePDF(Files.readAllBytes(Path.of("./LandOfFood.pdf")));
+        qm.parsePDF(Files.readAllBytes(Path.of("./LandOfFood.pdf")), "LandOfFood.pdf");
         /*qm.parseTxt("./LandOfFood.txt");*/
         // Test query
         query = "Where can I find the Moroccan Traditional Food?";
@@ -192,9 +192,9 @@ public class Main {
 
         Path filepath = Path.of(path);
         if (fileName.endsWith(".txt") || fileName.endsWith(".md")) {
-            qm.parseTxt(Files.readAllBytes(filepath));
+            qm.parseTxt(Files.readAllBytes(filepath), fileName);
         } else if (fileName.endsWith(".pdf")) {
-            qm.parsePDF(Files.readAllBytes(filepath));
+            qm.parsePDF(Files.readAllBytes(filepath), fileName);
         } else {
             System.out.println("Unsupported file type. Only .txt, .md, or .pdf are allowed.");
         }

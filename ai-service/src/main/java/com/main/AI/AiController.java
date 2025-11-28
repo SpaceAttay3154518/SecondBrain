@@ -50,9 +50,9 @@ public class AiController {
 
             String fileName = originalFilename.toLowerCase();
             if (fileName.endsWith(".txt") || fileName.endsWith(".md")) {
-                qm.parseTxt(file.getBytes());
+                qm.parseTxt(file.getBytes(), originalFilename);
             } else if (fileName.endsWith(".pdf")) {
-                qm.parsePDF(file.getBytes());
+                qm.parsePDF(file.getBytes(), originalFilename);
             } else {
                 return ResponseEntity.badRequest()
                         .body("Unsupported file type. Only .txt, .md, or .pdf are allowed.");

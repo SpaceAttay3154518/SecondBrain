@@ -7,6 +7,8 @@ import dev.langchain4j.data.document.Metadata;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
@@ -44,7 +46,7 @@ public class Main {
         System.out.println("------------------------------------------");
 
 
-        qm.parsePDF("./LandOfFood.pdf");
+        qm.parsePDF(Files.readAllBytes(Path.of("./LandOfFood.pdf")));
         /*qm.parseTxt("./LandOfFood.txt");*/
         // Test query
         query = "Where can I find the Moroccan Traditional Food?";
@@ -188,10 +190,11 @@ public class Main {
         File file = new File(path);
         String fileName = file.getName().toLowerCase();
 
+        Path filepath = Path.of(path);
         if (fileName.endsWith(".txt") || fileName.endsWith(".md")) {
-            qm.parseTxt(path);
+            qm.parseTxt(Files.readAllBytes(filepath));
         } else if (fileName.endsWith(".pdf")) {
-            qm.parsePDF(path);
+            qm.parsePDF(Files.readAllBytes(filepath));
         } else {
             System.out.println("Unsupported file type. Only .txt, .md, or .pdf are allowed.");
         }

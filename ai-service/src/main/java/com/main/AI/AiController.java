@@ -1,9 +1,13 @@
 package com.main.AI;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.FileWriter;
+import java.util.List;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -17,6 +21,7 @@ public class AiController {
 
     private static final String GROQ_API_KEY = Config.get("GROQ_API_KEY");
     private static final String MODEL_NAME = Config.get("MODEL_NAME");
+    private static final String UPLOAD_DIR = "./src/main/uploads/";
     public QueryManager qm;
 
     public AiController() {
@@ -26,27 +31,47 @@ public class AiController {
     }
 
 
-    // ---------------------------
-    // 1. /api/fileUpload
-    // ---------------------------
     @PostMapping("/fileUpload")
-    public ResponseEntity<Map<String, Object>> uploadFile(@RequestParam("file") MultipartFile file) {
+    public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file,
+                                        @RequestParam("id") String id) {
+        try {
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest().body("File is empty");
+            }
 
-        String randomId = UUID.randomUUID().toString();
+            if (id == null || id.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("ID is required");
+            }
 
-        // TODO: save file via service using randomId (not implemented here)
+            String originalFilename = file.getOriginalFilename();
+            if (originalFilename == null) {
+                return ResponseEntity.badRequest().body("Invalid file name");
+            }
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("id", randomId);
-        response.put("fileName", file.getOriginalFilename());
-        response.put("status", "uploaded");
+            String fileName = originalFilename.toLowerCase();
+            if (fileName.endsWith(".txt") || fileName.endsWith(".md")) {
+                qm.parseTxt(file.getBytes());
+            } else if (fileName.endsWith(".pdf")) {
+                qm.parsePDF(file.getBytes());
+            } else {
+                return ResponseEntity.badRequest()
+                        .body("Unsupported file type. Only .txt, .md, or .pdf are allowed.");
+            }
 
-        return ResponseEntity.ok(response);
+            qm.getDb().saveToFile("./src/main/resources/dbs/" + id + ".db");
+
+            return ResponseEntity.ok()
+                    .body(new ChunkResponse(
+                            originalFilename,
+                            file.getSize()
+                    ));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error processing file: " + e.getMessage());
+        }
     }
 
-    // ---------------------------
-    // 2. /api/chat
-    // ---------------------------
     @PostMapping("/query")
     public ResponseEntity<Map<String, Object>> chat(@RequestBody ChatRequest request) {
         String id = request.getId();
@@ -71,9 +96,7 @@ public class AiController {
         return ResponseEntity.ok(response);
     }
 
-    // ---------------------------
-    // 3. /deleteDB
-    // ---------------------------
+
     @DeleteMapping("/deleteDB")
     public ResponseEntity<Map<String, Object>> deleteDB(@RequestBody ChatRequest request) {
 
@@ -93,7 +116,7 @@ public class AiController {
             response.put("status", "Failed");
 
         }
-
+        qm.getDb().clear();
 
 
         return ResponseEntity.ok(response);
@@ -109,5 +132,18 @@ public class AiController {
 
         public String getQuestion() { return question; }
         public void setQuestion(String question) { this.question = question; }
+    }
+
+    static class ChunkResponse {
+        private String filename;
+        private long fileSize;
+
+        public ChunkResponse(String filename, long fileSize) {
+            this.filename = filename;
+            this.fileSize = fileSize;
+        }
+
+        public String getFilename() { return filename; }
+        public long getFileSize() { return fileSize; }
     }
 }

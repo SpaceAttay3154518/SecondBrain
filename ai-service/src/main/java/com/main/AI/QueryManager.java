@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class QueryManager {
     private RagService rag;
@@ -71,20 +72,16 @@ public class QueryManager {
     }
 
     // TODO - Parse Docs
-    public void parseTxt(String filePath) throws IOException {
-        String doc = new String(Files.readAllBytes(Paths.get(filePath)));
-        rag.addDocument(filePath, doc);
+    public void parseTxt(byte[] fileBytes) throws IOException {
+        String content = new String(fileBytes);;
+        rag.addDocument(UUID.randomUUID().toString(), content);
     }
-    public void parsePDF(String filePath) throws IOException {
-        File file = new File(filePath);
-        if (!file.exists() || !file.isFile()) {
-            throw new IOException("File not found: " + filePath);
-        }
+    public void parsePDF(byte[] fileByte) throws IOException {
 
-        try (PDDocument document = PDDocument.load(file)) {
+        try (PDDocument document = PDDocument.load(fileByte)) {
             PDFTextStripper stripper = new PDFTextStripper();
             String doc = stripper.getText(document);
-            rag.addDocument(filePath, doc);
+            rag.addDocument(UUID.randomUUID().toString(), doc);
         }
     }
 

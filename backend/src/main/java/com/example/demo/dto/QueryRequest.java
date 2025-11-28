@@ -2,13 +2,13 @@ package com.example.demo.dto;
 
 public class QueryRequest {
     private String question;
-    private String userId;
+    private String id;  // AI Model expects "id" field
 
     public QueryRequest() {}
 
-    public QueryRequest(String question, String userId) {
+    public QueryRequest(String question, String id) {
         this.question = question;
-        this.userId = userId;
+        this.id = id;
     }
 
     public String getQuestion() {
@@ -19,11 +19,11 @@ public class QueryRequest {
         this.question = question;
     }
 
-    public String getUserId() {
-        return userId;
+    public String getId() {
+        return id;
     }
 
-    public void setUserId(String userId) {
-        this.userId = userId;
+    public void setId(String id) {
+        this.id = id;
     }
 }

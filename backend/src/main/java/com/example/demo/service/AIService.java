@@ -32,7 +32,7 @@ public class AIService {
      */
     public QueryResponse askQuestion(String question, String userId) {
         try {
-            // Prepare request
+            // Prepare request - AI Model expects {id, question}
             QueryRequest request = new QueryRequest(question, userId);
             
             HttpHeaders headers = new HttpHeaders();
@@ -40,15 +40,23 @@ public class AIService {
             
             HttpEntity<QueryRequest> entity = new HttpEntity<>(request, headers);
             
-            // Call AI Model service
-            ResponseEntity<QueryResponse> response = restTemplate.exchange(
+            // Call AI Model service - returns {id, reply}
+            ResponseEntity<String> response = restTemplate.exchange(
                 aiServiceUrl + "/api/query",
                 HttpMethod.POST,
                 entity,
-                QueryResponse.class
+                String.class
             );
             
-            return response.getBody();
+            // Parse response manually since AI Model returns {id, reply} not {answer}
+            String responseBody = response.getBody();
+            if (responseBody != null && responseBody.contains("reply")) {
+                // Extract reply from JSON
+                String reply = responseBody.replaceAll(".*\"reply\"\\s*:\\s*\"([^\"]+)\".*", "$1");
+                return new QueryResponse(reply, true);
+            }
+            
+            return new QueryResponse(responseBody, true);
             
         } catch (Exception e) {
             System.err.println("Error calling AI service: " + e.getMessage());
@@ -64,31 +72,37 @@ public class AIService {
      */
     public DocumentUploadResponse uploadDocument(MultipartFile file, String userId) {
         try {
-            // Validate file type
+            // Validate file type - AI Model accepts .txt, .md, .pdf
             String filename = file.getOriginalFilename();
-            if (filename == null || (!filename.endsWith(".pdf") && !filename.endsWith(".txt"))) {
-                return new DocumentUploadResponse(false, "Only PDF and TXT files are supported");
+            if (filename == null || (!filename.endsWith(".pdf") && !filename.endsWith(".txt") && !filename.endsWith(".md"))) {
+                return new DocumentUploadResponse(false, "Only PDF, TXT, and MD files are supported");
             }
 
-            // Prepare multipart request
+            // Prepare multipart request - AI Model expects "file" and "id" parameters
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
             MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
             body.add("file", file.getResource());
-            body.add("userId", userId);
+            body.add("id", userId);  // AI Model expects "id" not "userId"
 
             HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
-            // Call AI Model service
-            ResponseEntity<DocumentUploadResponse> response = restTemplate.exchange(
-                aiServiceUrl + "/api/document/upload",
+            // Call AI Model service - endpoint is /api/fileUpload
+            ResponseEntity<String> response = restTemplate.exchange(
+                aiServiceUrl + "/api/fileUpload",
                 HttpMethod.POST,
                 requestEntity,
-                DocumentUploadResponse.class
+                String.class
             );
 
-            return response.getBody();
+            // AI Model returns {filename, fileSize}
+            String responseBody = response.getBody();
+            if (responseBody != null && responseBody.contains("filename")) {
+                return new DocumentUploadResponse(true, "Document uploaded successfully", userId);
+            }
+
+            return new DocumentUploadResponse(true, "Document uploaded successfully");
 
         } catch (Exception e) {
             System.err.println("Error uploading document to AI service: " + e.getMessage());
@@ -124,10 +138,24 @@ public class AIService {
      */
     public boolean deleteDocument(String documentId, String userId) {
         try {
-            restTemplate.delete(
-                aiServiceUrl + "/api/document/" + documentId + "?userId=" + userId
+            // AI Model expects DELETE /api/deleteDB with body {id, question}
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            
+            // Create request body with id
+            String requestBody = "{\"id\": \"" + userId + "\"}";
+            HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
+            
+            ResponseEntity<String> response = restTemplate.exchange(
+                aiServiceUrl + "/api/deleteDB",
+                HttpMethod.DELETE,
+                entity,
+                String.class
             );
-            return true;
+            
+            // Check if response contains "deleted" status
+            String responseBody = response.getBody();
+            return responseBody != null && responseBody.contains("deleted");
             
         } catch (Exception e) {
             System.err.println("Error deleting document: " + e.getMessage());

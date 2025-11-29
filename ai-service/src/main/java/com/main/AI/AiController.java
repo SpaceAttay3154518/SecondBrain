@@ -29,7 +29,7 @@ public class AiController {
 
     public AiController() {
 
-        qm = new QueryManager(GROQ_API_KEY, MODEL_NAME);
+        qm = QueryManager.getInstance(GROQ_API_KEY, MODEL_NAME);
 
     }
 

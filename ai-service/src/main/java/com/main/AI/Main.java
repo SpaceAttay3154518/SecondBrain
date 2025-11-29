@@ -5,7 +5,6 @@ import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.data.document.Metadata;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,7 +26,7 @@ public class Main {
     public static void queryManagerTest() throws IOException {
 
         // Initialize the QueryManager
-        QueryManager qm = new QueryManager(GROQ_API_KEY, MODEL_NAME);
+        QueryManager qm = QueryManager.getInstance(GROQ_API_KEY, MODEL_NAME);
 
 
         // Test query
@@ -219,7 +218,7 @@ public class Main {
 
         Scanner scanner = new Scanner(System.in);
         boolean running = true;
-        QueryManager qm = new QueryManager(GROQ_API_KEY, MODEL_NAME);
+        QueryManager qm = QueryManager.getInstance(GROQ_API_KEY, MODEL_NAME);
 
         while (running) {
             System.out.println("\n--- Menu ---");

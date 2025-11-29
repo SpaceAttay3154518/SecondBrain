@@ -12,24 +12,40 @@ import java.util.List;
 import java.util.UUID;
 
 public class QueryManager {
+    private static QueryManager instance;
+
     private RagService rag;
     private VectorDbManager db;
     private ModelService model;
 
-    public QueryManager(String api_key, String model_name) {
-
+    // Private constructor to prevent instantiation
+    private QueryManager(String api_key, String model_name) {
         this.db = new VectorDbManager();
         this.model = new ModelService(api_key, model_name);
         this.rag = new RagService(
                 db,
                 model.getModel()
         );
+    }
 
+    // Simple getInstance method
+    public static QueryManager getInstance(String api_key, String model_name) {
+        if (instance == null) {
+            instance = new QueryManager(api_key, model_name);
+        }
+        return instance;
+    }
 
+    // Overloaded getInstance for subsequent calls
+    public static QueryManager getInstance() {
+        if (instance == null) {
+            throw new IllegalStateException("QueryManager not initialized. Call getInstance(api_key, model_name) first.");
+        }
+        return instance;
     }
 
     public String answerQuery(String query) {
-        List <String> relevantDocs = new ArrayList<>();
+        List<String> relevantDocs = new ArrayList<>();
         List<VectorDbManager.SearchResult> results = rag.search(query, 3);
         for (VectorDbManager.SearchResult res : results) {
             relevantDocs.add(res.getText());
@@ -40,7 +56,6 @@ public class QueryManager {
         }
 
         String context = String.join("\n\n", relevantDocs);
-
         String augmentedPrompt = buildPromptWithContext(query, context);
 
         return model.generateResponse(augmentedPrompt);
@@ -64,26 +79,25 @@ public class QueryManager {
     public RagService getRag() {
         return rag;
     }
+
     public ModelService getModel() {
         return model;
     }
-    public  VectorDbManager getDb() {
+
+    public VectorDbManager getDb() {
         return db;
     }
 
-    // TODO - Parse Docs
     public void parseTxt(byte[] fileBytes, String id) throws IOException {
         String content = new String(fileBytes);
         rag.addDocument(id, content);
     }
-    public void parsePDF(byte[] fileByte, String id) throws IOException {
 
+    public void parsePDF(byte[] fileByte, String id) throws IOException {
         try (PDDocument document = PDDocument.load(fileByte)) {
             PDFTextStripper stripper = new PDFTextStripper();
             String doc = stripper.getText(document);
             rag.addDocument(id, doc);
         }
     }
-
-
 }

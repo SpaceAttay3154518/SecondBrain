@@ -128,6 +128,11 @@
   </div>
 </template>
 
+
+
+
+
+
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -233,7 +238,7 @@ const askAI = async () => {
     const result = await askQuestion(question.value)
     
     if (result.success) {
-      answer.value = `<strong>AI Answer:</strong><br/>${escapeHtml(result.answer)}`
+      answer.value = `<strong>AI Answer:</strong><br/>${(result.answer)}`
       recent.value.unshift(`Asked: ${question.value}`)
     } else {
       answer.value = `<strong class="text-red-600">Error:</strong> ${escapeHtml(result.error || 'Failed to get answer')}`
@@ -271,3 +276,5 @@ function escapeHtml(s) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 }
 </script>
+
+

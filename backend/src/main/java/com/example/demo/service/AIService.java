@@ -139,12 +139,26 @@ public class AIService {
      */
     public String getUserDocuments(String userId) {
         try {
-            ResponseEntity<String> response = restTemplate.getForEntity(
-                aiServiceUrl + "/api/documents?userId=" + userId,
+          
+            // AI Model expects DELETE /api/deleteDB with body {id, question}
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            
+            // Create request body with id
+            String requestBody = "{\"id\": \"" + userId + "\"}";
+            HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
+            
+            ResponseEntity<String> response = restTemplate.exchange(
+                aiServiceUrl + "/api/documents",
+                HttpMethod.POST,
+                entity,
                 String.class
             );
             
-            return response.getBody();
+            // Check if response contains "deleted" status
+            String responseBody = response.getBody();
+            return responseBody;
+
             
         } catch (Exception e) {
             System.err.println("Error getting user documents: " + e.getMessage());

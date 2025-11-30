@@ -25,25 +25,45 @@ public class RagService {
         this.systemPrompt = "You are a helpful assistant.";
     }
 
-    public List<String> chunkText(String text) {
-        List<String> chunks = new ArrayList<>();
+   
+public List<String> chunkText(String text) {
+    List<String> chunks = new ArrayList<>();
 
-        if (text == null || text.isEmpty()) {
-            return chunks;
-        }
-
-        // Split on one or more newlines (\n or \r\n)
-        String[] paragraphs = text.split("\n\\R+");
-
-        for (String p : paragraphs) {
-            String cleaned = p.trim();
-            if (!cleaned.isEmpty()) {
-                chunks.add(cleaned);
-            }
-        }
-
+    if (text == null || text.isEmpty()) {
         return chunks;
     }
+
+    // Split into sentences based on ., ?, !
+    String[] sentences = text.split("(?<=[.!?])\\s+");
+
+    StringBuilder group = new StringBuilder();
+    int count = 0;
+
+    for (String sentence : sentences) {
+        String cleaned = sentence.trim();
+        if (cleaned.isEmpty()) continue;
+
+        if (group.length() > 0) {
+            group.append(" ");
+        }
+        group.append(cleaned);
+        count++;
+
+        // When 3 sentences collected → add chunk
+        if (count == 3) {
+            chunks.add(group.toString());
+            group.setLength(0);
+            count = 0;
+        }
+    }
+
+    // Add remaining sentences (<3 at end)
+    if (group.length() > 0) {
+        chunks.add(group.toString());
+    }
+
+    return chunks;
+}
 
 
 
@@ -75,7 +95,7 @@ public class RagService {
         TextSegment qSeg = new TextSegment(query, meta);
 
         Embedding emb = vectorDb.getEmbeddingModel().embed(qSeg).content();
-        return vectorDb.search(emb, topK, 0.4);
+        return vectorDb.search(emb, topK, 0.6);
     }
 
 

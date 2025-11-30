@@ -3,6 +3,7 @@ package com.example.demo.service;
 import com.example.demo.dto.QueryRequest;
 import com.example.demo.dto.QueryResponse;
 import com.example.demo.dto.DocumentUploadResponse;
+import com.example.demo.factory.ResponseFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -73,16 +74,16 @@ public class AIService {
                                     .replace("\\n", "\n")
                                     .replace("\\t", "\t")
                                     .replace("\\\\", "\\");
-                        return new QueryResponse(reply, true);
+                        return ResponseFactory.createSuccessQueryResponse(reply);
                     }
                 }
             }
             
-            return new QueryResponse(responseBody, true);
+            return ResponseFactory.createSuccessQueryResponse(responseBody);
             
         } catch (Exception e) {
             System.err.println("Error calling AI service: " + e.getMessage());
-            return new QueryResponse(null, false, "Failed to get answer from AI service: " + e.getMessage());
+            return ResponseFactory.createAIServiceErrorResponse(e);
         }
     }
 
@@ -97,7 +98,7 @@ public class AIService {
             // Validate file type - AI Model accepts .txt, .md, .pdf
             String filename = file.getOriginalFilename();
             if (filename == null || (!filename.endsWith(".pdf") && !filename.endsWith(".txt") && !filename.endsWith(".md"))) {
-                return new DocumentUploadResponse(false, "Only PDF, TXT, and MD files are supported");
+                return ResponseFactory.createUnsupportedFileTypeResponse();
             }
 
             // Prepare multipart request - AI Model expects "file" and "id" parameters
@@ -121,14 +122,14 @@ public class AIService {
             // AI Model returns {filename, fileSize}
             String responseBody = response.getBody();
             if (responseBody != null && responseBody.contains("filename")) {
-                return new DocumentUploadResponse(true, "Document uploaded successfully", userId);
+                return ResponseFactory.createSuccessUploadResponse(userId);
             }
 
-            return new DocumentUploadResponse(true, "Document uploaded successfully");
+            return ResponseFactory.createSuccessUploadResponse();
 
         } catch (Exception e) {
             System.err.println("Error uploading document to AI service: " + e.getMessage());
-            return new DocumentUploadResponse(false, "Failed to upload document: " + e.getMessage());
+            return ResponseFactory.createUploadExceptionResponse(e);
         }
     }
 

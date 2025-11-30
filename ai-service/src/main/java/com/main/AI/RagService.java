@@ -25,46 +25,69 @@ public class RagService {
         this.systemPrompt = "You are a helpful assistant.";
     }
 
-   
-public List<String> chunkText(String text) {
-    List<String> chunks = new ArrayList<>();
+    public List<String> chunkText(String text) {
+        final int MAX_CHARS = 1000; // change as needed
 
-    if (text == null || text.isEmpty()) {
+        List<String> chunks = new ArrayList<>();
+        if (text == null || text.trim().isEmpty()) return chunks;
+
+        // 1) Split into paragraphs by two or more newlines (preserves single newlines inside)
+        String[] paragraphs = text.split("(\\r?\\n){2,}");
+
+        for (String para : paragraphs) {
+            String p = para.trim();
+            if (p.isEmpty()) continue;
+
+            // If short, add directly
+            if (p.length() <= MAX_CHARS) {
+                chunks.add(p);
+                continue;
+            }
+
+            // 2) Split paragraph into sentences using a simple regex.
+            // This keeps punctuation on the sentence and splits on whitespace after ., ! or ?
+            String[] sentences = p.split("(?<=[.!?])\\s+");
+
+            StringBuilder current = new StringBuilder();
+            for (String s : sentences) {
+                String sent = s.trim();
+                if (sent.isEmpty()) continue;
+
+                // If a single sentence is longer than MAX_CHARS, chunk it by characters
+                if (sent.length() > MAX_CHARS) {
+                    // flush existing
+                    if (current.length() > 0) {
+                        chunks.add(current.toString().trim());
+                        current.setLength(0);
+                    }
+                    // split this long sentence into pieces of MAX_CHARS
+                    int idx = 0;
+                    while (idx < sent.length()) {
+                        int end = Math.min(idx + MAX_CHARS, sent.length());
+                        chunks.add(sent.substring(idx, end).trim());
+                        idx = end;
+                    }
+                    continue;
+                }
+
+                // If adding this sentence would exceed MAX_CHARS, flush current chunk
+                if (current.length() > 0 && current.length() + 1 + sent.length() > MAX_CHARS) {
+                    chunks.add(current.toString().trim());
+                    current.setLength(0);
+                }
+
+                // append sentence (with a space if needed)
+                if (current.length() > 0) current.append(' ');
+                current.append(sent);
+            }
+
+            if (current.length() > 0) {
+                chunks.add(current.toString().trim());
+            }
+        }
+
         return chunks;
     }
-
-    // Split into sentences based on ., ?, !
-    String[] sentences = text.split("(?<=[.!?])\\s+");
-
-    StringBuilder group = new StringBuilder();
-    int count = 0;
-
-    for (String sentence : sentences) {
-        String cleaned = sentence.trim();
-        if (cleaned.isEmpty()) continue;
-
-        if (group.length() > 0) {
-            group.append(" ");
-        }
-        group.append(cleaned);
-        count++;
-
-        // When 3 sentences collected → add chunk
-        if (count == 3) {
-            chunks.add(group.toString());
-            group.setLength(0);
-            count = 0;
-        }
-    }
-
-    // Add remaining sentences (<3 at end)
-    if (group.length() > 0) {
-        chunks.add(group.toString());
-    }
-
-    return chunks;
-}
-
 
 
     public List<String> addDocument(String docId, String text) {
@@ -99,38 +122,5 @@ public List<String> chunkText(String text) {
     }
 
 
-    public String answer(String query, int topK) {
-        List<VectorDbManager.SearchResult> results = search(query, topK);
-
-        StringBuilder ctx = new StringBuilder();
-        int count = 1;
-
-        for (VectorDbManager.SearchResult r : results) {
-            ctx.append("[Context ").append(count++).append(" | score=")
-                    .append(String.format("%.4f", r.getScore())).append("]\n")
-                    .append(r.getText()).append("\n\n");
-        }
-
-        String prompt;
-        if (results.isEmpty()) {
-            prompt = query;
-        } else {
-            prompt = "Use the following context to answer the question.\n\n"
-                    + ctx + "Question: " + query + "\nAnswer:";
-        }
-
-        ChatRequest request = ChatRequest.builder()
-                .messages(List.of(
-                        new SystemMessage(systemPrompt),
-                        new UserMessage(prompt)
-                ))
-                .build();
-
-        ChatResponse response = chatModel.chat(request);
-        if (response == null || response.aiMessage() == null) {
-            return null;
-        }
-
-        return response.aiMessage().text();
-    }
+    
 }

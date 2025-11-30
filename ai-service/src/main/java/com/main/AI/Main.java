@@ -45,8 +45,7 @@ public class Main {
         System.out.println("------------------------------------------");
 
 
-        qm.parsePDF(Files.readAllBytes(Path.of("./LandOfFood.pdf")), "LandOfFood.pdf");
-        /*qm.parseTxt("./LandOfFood.txt");*/
+        qm.parseDocument(Files.readAllBytes(Path.of("./LandOfFood.pdf")), "LandOfFood.pdf");
         // Test query
         query = "Where can I find the Moroccan Traditional Food?";
 
@@ -121,10 +120,7 @@ public class Main {
             System.out.println("Match: " + res.getText());
         }
 
-        System.out.println("\nLLM Response:");
-        String answer = rag.answer(query, 3);
 
-        System.out.println(answer);
     }
 
 
@@ -190,12 +186,10 @@ public class Main {
         String fileName = file.getName().toLowerCase();
 
         Path filepath = Path.of(path);
-        if (fileName.endsWith(".txt") || fileName.endsWith(".md")) {
-            qm.parseTxt(Files.readAllBytes(filepath), fileName);
-        } else if (fileName.endsWith(".pdf")) {
-            qm.parsePDF(Files.readAllBytes(filepath), fileName);
-        } else {
-            System.out.println("Unsupported file type. Only .txt, .md, or .pdf are allowed.");
+        try {
+            qm.parseDocument(Files.readAllBytes(filepath), fileName);
+        } catch (UnsupportedOperationException ex) {
+            System.out.println(ex.getMessage());
         }
 
 

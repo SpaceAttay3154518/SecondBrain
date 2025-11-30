@@ -41,7 +41,7 @@ public class ModelService {
                 .build();
 
         ChatResponse response = chatModel.chat(request);
-
+        System.out.println(response);
         return response.aiMessage().text();
     }
     public String generateResponse(String userMessage) {

@@ -52,11 +52,8 @@ public class AiController {
             }
 
             String fileName = originalFilename.toLowerCase();
-            if (fileName.endsWith(".txt") || fileName.endsWith(".md")) {
-                qm.parseTxt(file.getBytes(), originalFilename);
-            } else if (fileName.endsWith(".pdf")) {
-                qm.parsePDF(file.getBytes(), originalFilename);
-            } else {
+            boolean success = qm.parseDocument(file.getBytes(), originalFilename);
+            if (!success) {
                 return ResponseEntity.badRequest()
                         .body("Unsupported file type. Only .txt, .md, or .pdf are allowed.");
             }
@@ -76,7 +73,7 @@ public class AiController {
     }
 
     @PostMapping("/query")
-    public ResponseEntity<Map<String, Object>> chat(@RequestBody ChatRequest request) {
+    public ResponseEntity<String> chat(@RequestBody ChatRequest request) {
         String id = request.getId();
         String msg = request.getQuestion();
 
@@ -94,9 +91,9 @@ public class AiController {
 
         Map<String, Object> response = new HashMap<>();
         response.put("id", id);
-        response.put("reply", "The AI said: " + res);
+        response.put("reply", res);
 
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(res);
     }
 
 

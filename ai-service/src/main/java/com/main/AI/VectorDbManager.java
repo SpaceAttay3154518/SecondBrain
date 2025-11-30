@@ -6,9 +6,14 @@ import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.embedding.onnx.allminilml6v2.AllMiniLmL6V2EmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingStore;
 import dev.langchain4j.store.embedding.inmemory.InMemoryEmbeddingStore;
+
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
+import java.util.Set;
+import java.util.LinkedHashSet;
+import java.text.BreakIterator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,31 +42,33 @@ public class VectorDbManager {
         return ids;
     }
 
-    public List<String> retrieveDocuments() {
-        String jsonContent = ((InMemoryEmbeddingStore<TextSegment>) store).serializeToJson();
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode root = mapper.readTree(jsonContent);
+   
+public List<String> retrieveDocuments() throws JsonProcessingException {
+    String jsonContent = ((InMemoryEmbeddingStore<TextSegment>) store).serializeToJson();
+    ObjectMapper mapper = new ObjectMapper();
+    JsonNode root = mapper.readTree(jsonContent);
 
-        List<String> fileNames = new ArrayList<>();
+    Set<String> fileNameSet = new LinkedHashSet<>(); // preserves insertion order
 
-        // Loop through entries
-        for (JsonNode entry : root.path("entries")) {
-            JsonNode docIdNode = entry
-                    .path("embedded")
-                    .path("metadata")
-                    .path("metadata")
-                    .path("docId");
+    // Loop through entries
+    for (JsonNode entry : root.path("entries")) {
+        JsonNode docIdNode = entry
+                .path("embedded")
+                .path("metadata")
+                .path("metadata")
+                .path("docId");
 
-            if (!docIdNode.isMissingNode()) {
-                fileNames.add(docIdNode.asText());
-            }
+        if (!docIdNode.isMissingNode()) {
+            fileNameSet.add(docIdNode.asText()); // Set automatically prevents duplicates
         }
-
-        // Print result
-        fileNames.forEach(System.out::println);
-        return fileNames;
     }
 
+    List<String> fileNames = new ArrayList<>(fileNameSet);
+
+    // Print result
+    fileNames.forEach(System.out::println);
+    return fileNames;
+}
 
     public void deleteSegment(String id) {
         store.remove(id);

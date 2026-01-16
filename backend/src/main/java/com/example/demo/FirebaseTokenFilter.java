@@ -47,7 +47,7 @@ public class FirebaseTokenFilter extends HttpFilter {
             String uid = decodedToken.getUid();
             System.out.println("✅ Token verified! UID: " + uid);
             req.setAttribute("uid", uid);
-            chain.doFilter(req, res);
+            chain.doFilter(req, res); // allow request to proceed to controller 
         } catch (Exception e) {
             System.out.println("❌ Token verification failed: " + e.getMessage());
             e.printStackTrace();

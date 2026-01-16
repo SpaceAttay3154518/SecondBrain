@@ -25,6 +25,7 @@ public class RagService {
         this.systemPrompt = "You are a helpful assistant.";
     }
 
+ 
     public List<String> chunkText(String text) {
         final int MAX_CHARS = 1000; // change as needed
 

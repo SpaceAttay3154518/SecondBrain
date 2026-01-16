@@ -10,8 +10,8 @@ SecondBrain is an AI-powered assistant that transforms personal and professional
 - [YoussefGUERAI](https://github.com/YoussefGUERAI)  
 
 ## 🌐 Scope
-SecondBrain serves learners and professionals by enabling document organization , intelligent search , and interactive question-answering . It also generates summaries, quizzes , and thematic overviews while managing notes, bookmarks, and conversation history in a secure, unified environment .
+SecondBrain serves learners and professionals by enabling document organization , intelligent search , and interactive question-answering . It also generates summaries, quizzes , and thematic overviews while managing notes, bookmarks, and conversation history in a secure, unified environment.
 
 ## 🎯 Purpose
-SecondBrain aims to revolutionize personal knowledge management by boosting productivity , learning retention , and research efficiency . It helps users turn stored information into actionable insights, enabling smarter learning and faster decision-making .
+SecondBrain aims to revolutionize personal knowledge management by boosting productivity , learning retention , and research efficiency . It helps users turn stored information into actionable insights, enabling smarter learning and faster decision-making.
 
